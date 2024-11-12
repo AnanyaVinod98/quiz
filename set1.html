@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: url(./images/bg.jpg);
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .quiz-container {
+            width: 75%;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            text-align: center;
+        }
+        .question-nav {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .question-num {
+            padding: 5px 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .question-num.current {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .question {
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-top: 15px;
+        }
+        .options {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .option {
+            font-size: 16px;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .option.correct {
+            background-color: #c8e6c9; /* Green */
+        }
+        .option.wrong {
+            background-color: #ffcdd2; /* Red */
+        }
+        .circular-score {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 20px auto;
+        }
+        .circular-score .circle {
+            fill: none;
+            stroke-width: 10;
+            transition: stroke-dashoffset 0.4s;
+        }
+        .circle-bg {
+            stroke: #ddd;
+        }
+        .circle-progress {
+            stroke: #4caf50;
+            stroke-dasharray: 314; /* Approx. circumference of the circle (2 * PI * radius) */
+            stroke-dashoffset: 314;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .score-text {
+            position: absolute;
+            top: 60%;
+            left: 60%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .next-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .next-btn:disabled {
+            background: #ddd;
+        }
+        .header {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .header a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="header">
+            <a href="index.html"> Home</a>
+            <h2>Question Set 1</h2>
+        </div>
+        <div class="question-nav" id="questionNav"></div>
+        <div class="circular-score">
+            <svg width="120" height="120">
+                <circle cx="60" cy="60" r="50" class="circle circle-bg"></circle>
+                <circle cx="60" cy="60" r="50" class="circle circle-progress" id="circleProgress"></circle>
+            </svg>
+            <div class="score-text" id="scoreText">0/10</div>
+        </div>        
+        <div class="question" id="question"></div>
+        <div class="options" id="options"></div>
+        <button class="next-btn" id="nextBtn" disabled>Next</button>
+    </div>
+
+    <script>
+        const quizData = [
+            { question: "Use four 4s and any of the mathematical operations (+ , - , x , ÷ ) to make a total of 7.", options: ["44 +4 -4", "4x4+4-4", "44 ÷ 4 – 4", "4/4 +4+4"], answer: 2 },
+            { question: "Some bacteria double every hour. If there were 2 bacteria in the beginning , how many bacteria will be there after 8 hours?", options: ["216", "512", "256", "1034"], answer: 1 },
+            { question: "In a pictograph ** represents 5 students, then what does ****** represent?", options: ["6", "15", "12", "10"], answer: 1 },
+            { question: "A theatre has 1600 seats. There are 65 rows of seats out of which 5 rows have 20 seats each. If the number of rows in the remaining rows are equal How many seats each  are there in the remaining rows?", options: ["25", "60", "40", "65"], answer: 0 },
+            { question: "I am an odd 3 digit number less than 200. The product of my digits and thier sum is same. What number am I?", options: ["231", "321", "132", "123"], answer: 3 },
+            { question: "If you write down all the numbers from 1 to 100, then how many times does 1 occur?", options: ["11", "21", "20", "10"], answer: 1 },
+            { question: "How many cubes of side 5 cm are equivalent in volume to a 15cm cube?", options: ["25", "30", "27", "33"], answer: 2 },
+            { question: "Smallest two digit number which is equal to seven times the sum of its digits", options: ["13", "12", "25", "21"], answer: 3 },
+            { question: "Write the year of 2024 in roman numerals?", options: ["LLXXIV", "LCXXIV", "MMXXIV", "CCXXIV"], answer: 2 },
+            {question: "What is next in the following numbers 256,289,324,361 __", options: ["440", "400", "576", "676"], answer: 1}
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+
+        const questionNavEl = document.getElementById('questionNav');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const scoreText = document.getElementById('scoreText');
+        const circleProgress = document.getElementById('circleProgress');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function loadQuestion() {
+            nextBtn.disabled = true;
+            optionsEl.innerHTML = '';
+            updateQuestionNav();
+
+            const questionData = quizData[currentQuestion];
+            questionEl.innerText = `Question ${currentQuestion + 1}: ${questionData.question}`;
+            
+            questionData.options.forEach((option, index) => {
+                const optionBtn = document.createElement('button');
+                optionBtn.classList.add('option');
+                optionBtn.innerText = option;
+                optionBtn.onclick = () => selectAnswer(index);
+                optionsEl.appendChild(optionBtn);
+            });
+        }
+
+        function updateQuestionNav() {
+            questionNavEl.innerHTML = '';
+            quizData.forEach((_, index) => {
+                const questionNum = document.createElement('div');
+                questionNum.classList.add('question-num');
+                if (index === currentQuestion) questionNum.classList.add('current');
+                questionNum.innerText = index + 1;
+                questionNavEl.appendChild(questionNum);
+            });
+        }
+
+        function selectAnswer(selectedIndex) {
+            const questionData = quizData[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            if (selectedIndex === questionData.answer) {
+                options[selectedIndex].classList.add('correct');
+                score++;
+            } else {
+                options[selectedIndex].classList.add('wrong');
+                options[questionData.answer].classList.add('correct');
+            }
+            updateScore();
+            nextBtn.disabled = false;
+        }
+
+        function updateScore() {
+            scoreText.innerText = `${score}/${quizData.length}`;
+            const progressPercentage = (score / quizData.length) * 100;
+            circleProgress.style.strokeDashoffset = 314 - (314 * progressPercentage / 100);
+        }
+
+        nextBtn.onclick = () => {
+            currentQuestion++;
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                questionEl.innerText = "Quiz Completed!";
+                optionsEl.innerHTML = '';
+                questionNavEl.innerHTML = '';
+                nextBtn.style.display = 'none';
+            }
+        };
+
+        loadQuestion();
+    </script>
+</body>
+</html>
