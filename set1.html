@@ -155,6 +155,9 @@
                 margin: 0;
             }
         }
+        button:disabled {
+            color: initial;
+        }
     </style>
 </head>
 <body>
@@ -235,6 +238,9 @@
         function selectAnswer(selectedIndex) {
             const questionData = quizData[currentQuestion];
             const options = document.querySelectorAll('.option');
+
+            if (nextBtn.disabled === false) return;
+
             if (selectedIndex === questionData.answer) {
                 options[selectedIndex].classList.add('correct');
                 score++;
@@ -242,7 +248,11 @@
                 options[selectedIndex].classList.add('wrong');
                 options[questionData.answer].classList.add('correct');
             }
+
+            options.forEach(option => option.disabled = true);
+
             updateScore();
+
             nextBtn.disabled = false;
         }
 
