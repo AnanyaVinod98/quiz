@@ -10,7 +10,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             margin: 0;
             background: url(./images/bg.jpg);
             background-repeat: no-repeat;
@@ -23,6 +22,8 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             border-radius: 10px;
             text-align: center;
+            margin-top: 160px;
+            margin-bottom: 90px;
         }
         .question-nav {
             display: flex;
@@ -64,10 +65,10 @@
             transition: background-color 0.3s;
         }
         .option.correct {
-            background-color: #c8e6c9; /* Green */
+            background-color: #9bfc9e; /* Green */
         }
         .option.wrong {
-            background-color: #ffcdd2; /* Red */
+            background-color: #fc9da6; /* Red */
         }
         .circular-score {
             position: relative;
@@ -147,6 +148,11 @@
         
         header h2 {
             padding-right: 20px;
+        }
+        @media screen and(min-width: 600px) {
+            .quiz-container {
+                margin: 0;
+            }
         }
     </style>
 </head>
